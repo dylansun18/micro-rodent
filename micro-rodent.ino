@@ -1,5 +1,6 @@
 #include <vector>
 #include <cmath>
+#include "Maze.h"
 using namespace std;
 
 //wheel circumference = 12.566 cm per rev
@@ -13,11 +14,14 @@ int interrupt_pin = 4;
 int sensorPin = 5;
 //int analogPin = 20;
 
+//Maze stuff
+Maze m1;
+
 //estimate position
 int motorCount = 0;
 int prevTime = 0;
 int currTime = 0;
-int timeTol = 50;
+int timeTol = 38; //works pretty well for 70 pwm but not as wellf or 30 pwm tmp38
 
 //calculate angle
 int rref = 100;
@@ -25,7 +29,7 @@ int rread = 100;
 
 //calculate velocity
 vector<double> verror;
-double vref = 2.5;
+double vref = 1.4;
 double vread = 0.0;
 double esum = 0.0;
 int vrunning = 70;
@@ -36,21 +40,27 @@ void my_isr(){
     motorCount++;
     Serial.print(motorCount);
     Serial.print(" Interrupts, ");
-    Serial.print(motorCount/12.0);
+    Serial.print(motorCount/12.0); //number of total rotations that have happened
     Serial.println(" Rotations (according to encoder)");
+    
     //vread is the angular velocity given by motor encoders (1/12 of a rotation per change in time)
     vread = (1.0/12.0)/((currTime-prevTime)/1000.0); //not accurate rn
-    verror.push_back(vref - vread);
+    verror.push_back(vref-vread);
     esum += (vref - vread);
-    vrunning = calculatePwm(currTime, prevTime);
+
+    Serial.print("vread: ");
+    Serial.println(vread);
+//    Serial.print("error: vref - vread = ");
+//    Serial.println(vref-vread);
+    vrunning = abs(calculatePwm(currTime, prevTime));
+//    Serial.print("calculated velocity: ");
+//    Serial.println(calculatePwm(currTime, prevTime));
     prevTime = currTime;
     
     //Serial.print((motorCount/12.0)*12.566);
     //Serial.println(" cm travelled");
-    //Serial.print("vread: ");
-    //Serial.println(vread);
+
   }
-  
 }
 
 void setup() {
@@ -93,8 +103,21 @@ int calculateAngle(){
 }
 
 int calculatePwm(unsigned long ct, unsigned long pt){
-  int newPwm = floor(2*verror[verror.size()-1] + 2*((verror[verror.size() - 1] - verror[verror.size() - 2])/(ct-pt)) + 2*currTime*esum);
+  
+  int changeInPwm = floor(1.0*verror.back() + 0.1*((verror.back()- verror[verror.size() - 2])/(ct-pt)) + 0*currTime*esum);
+  int newPwm = vrunning + changeInPwm;
   return newPwm;
+}
+
+void printMaze(){
+  for(int i = 0; i < 8; i++){
+    for(int j = 0; j < 8; j++){
+      Serial.print(m1.getCell(i,j).getDistance());
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
+  Serial.println("print");
 }
 
 void loop() {
@@ -102,6 +125,7 @@ void loop() {
   
   //int readVal = analogRead(20);
   //Serial.println("Distance from wall: " + readVal);
-  
   driveForward(70);
+  printMaze();
+  delay(1000);
 }

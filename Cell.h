@@ -14,7 +14,8 @@ class Cell{
     void setX(int x);
     void setY(int y);
     void setDistance(int distanceIn);
-    Cell(int xIn, int yIn, int distanceIn);
+    Cell(int xIn, int yIn);
+    Cell();
 };
 
 #endif

@@ -1,8 +1,15 @@
 #include "Cell.h"
 
-Cell::Cell(int xIn, int yIn, int distanceIn){
+Cell::Cell(){
+  x = 0; 
+  y = 0;
+  distance = 0;
+}
+
+Cell::Cell(int xIn, int yIn){
   x = xIn;
   y = yIn;
+  distance = 0;
 }
 
 int Cell::getX(){
