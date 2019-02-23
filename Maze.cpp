@@ -29,53 +29,30 @@ void Maze::initWalls(){
 }
 
 void Maze::floodFill(){
-  floodFillBR(8/2,8/2,0);
-  floodFillTR(8/2-1,8/2,0);
-  floodFillBL(8/2,8/2-1,0);
-  floodFillTL(8/2-1,8/2-1,0);
-}
-
-void Maze::floodFillBR(int x, int y, int d){
-  if(x>7 || y> 7){
-    return;
-  }
-  else{
-    cells[x][y].setDistance(d);
-    floodFillBR(x+1, y, d+1);
-    floodFillBR(x, y+1, d+1);
-  }
-}
-
-void Maze::floodFillBL(int x, int y, int d){
-  if(x > 7 || y < 0){
-    return;
-  }
-  else{
-    cells[x][y].setDistance(d);
-    floodFillBL(x+1, y, d+1);
-    floodFillBL(x, y-1, d+1);
-  }
-}
-
-void Maze::floodFillTL(int x, int y, int d){
-  if(x < 0 || y < 0){
-    return;
-  }
-  else{
-    cells[x][y].setDistance(d);
-    floodFillTL(x-1, y, d+1);
-    floodFillTL(x, y-1, d+1);
-  }
-}
-
-void Maze::floodFillTR(int x, int y, int d){
-  if(x < 0 || y > 7){
-    return;
-  }
-  else{
-    cells[x][y].setDistance(d);
-    floodFillTR(x-1, y, d+1);
-    floodFillTR(x, y+1, d+1);
+  int counter = 0;
+  int ocounter = 8-2;
+  for(int i = 0; i < 8; i++){
+    counter = ocounter;
+    for(int j = 0; j < 8; j++){
+      cells[i][j].setDistance(counter);
+      if(j < (8/2)-1){
+        counter--;
+      }
+      else if(j == (8/2)-1){
+      }
+      else{
+        counter++;
+      }
+    }
+    if(i < (8/2)-1){
+      ocounter--;
+    }
+    else if(i == (8/2)-1){
+      
+    }
+    else{
+      ocounter++;
+    }
   }
 }
 

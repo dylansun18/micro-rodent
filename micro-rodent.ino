@@ -21,7 +21,11 @@ Maze m1;
 int motorCount = 0;
 int prevTime = 0;
 int currTime = 0;
-int timeTol = 38; //works pretty well for 70 pwm but not as wellf or 30 pwm tmp38
+int timeTol = 5; //works pretty well for 70 pwm but not as wellf or 30 pwm tmp38
+int angle = 0;
+int r1 = 100;
+int r2 = 300;
+int r3 = 200;
 
 //calculate angle
 int rref = 100;
@@ -32,7 +36,7 @@ vector<double> verror;
 double vref = 1.4;
 double vread = 0.0;
 double esum = 0.0;
-int vrunning = 70;
+int vCalc = 70;
 
 void my_isr(){
   currTime = millis();
@@ -40,8 +44,6 @@ void my_isr(){
     motorCount++;
     Serial.print(motorCount);
     Serial.print(" Interrupts, ");
-    Serial.print(motorCount/12.0); //number of total rotations that have happened
-    Serial.println(" Rotations (according to encoder)");
     
     //vread is the angular velocity given by motor encoders (1/12 of a rotation per change in time)
     vread = (1.0/12.0)/((currTime-prevTime)/1000.0); //not accurate rn
@@ -50,15 +52,7 @@ void my_isr(){
 
     Serial.print("vread: ");
     Serial.println(vread);
-//    Serial.print("error: vref - vread = ");
-//    Serial.println(vref-vread);
-    vrunning = abs(calculatePwm(currTime, prevTime));
-//    Serial.print("calculated velocity: ");
-//    Serial.println(calculatePwm(currTime, prevTime));
     prevTime = currTime;
-    
-    //Serial.print((motorCount/12.0)*12.566);
-    //Serial.println(" cm travelled");
 
   }
 }
@@ -98,14 +92,31 @@ void stopMotors(){
   digitalWrite(ain2Pin, 0);
 }
 
-int calculateAngle(){
-  return 1;
+void centerRobot(){
+  
+}
+
+void rotate(int amount){
+  
+}
+
+void reactReadings(){
+  if(r2 < 50){
+    vCalc = 0;
+    centerRobot();
+  }
+  if(r1 - r3 > 50){
+    rotate(-2);
+  }
+  if(r3 - r1 > 50){
+    rotate(2);
+  }
 }
 
 int calculatePwm(unsigned long ct, unsigned long pt){
   
   int changeInPwm = floor(1.0*verror.back() + 0.1*((verror.back()- verror[verror.size() - 2])/(ct-pt)) + 0*currTime*esum);
-  int newPwm = vrunning + changeInPwm;
+  int newPwm = vCalc + changeInPwm;
   return newPwm;
 }
 
@@ -125,7 +136,9 @@ void loop() {
   
   //int readVal = analogRead(20);
   //Serial.println("Distance from wall: " + readVal);
-  driveForward(70);
-  printMaze();
+  driveForward(vCalc); //2.3 rotations per sec, 28.9cm/s
+  reactReadings();
+  //printMaze();
   delay(1000);
+  r2 -= 100;
 }
