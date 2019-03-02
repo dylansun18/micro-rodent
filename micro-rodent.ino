@@ -7,12 +7,12 @@ using namespace std;
 //tweak timeTol so that motor count is accurate
 
 //motor driver
-int ain2Pin = 0;
-int ain1Pin = 1;
-int pwmaPin = 3;
-int interrupt_pin = 4;
-int sensorPin = 5;
-//int analogPin = 20;
+const int ain2Pin = 0;
+const int ain1Pin = 1;
+const int pwmaPin = 3;
+const int interrupt_pin = 4;
+const int sensorPin = 5;
+const int analogPin = 20;
 
 //Maze stuff
 Maze m1;
@@ -37,6 +37,9 @@ double vref = 1.4;
 double vread = 0.0;
 double esum = 0.0;
 int vCalc = 70;
+
+//states
+bool inReverse = false;
 
 void my_isr(){
   currTime = millis();
@@ -64,12 +67,12 @@ void setup() {
   pinMode(pwmaPin,OUTPUT);
   pinMode(interrupt_pin, INPUT);
   pinMode(sensorPin, OUTPUT);
-//pinMode(analogPin,INPUT);
+  pinMode(analogPin,INPUT);
 
   digitalWrite(sensorPin, HIGH);
   
-  attachInterrupt(digitalPinToInterrupt(interrupt_pin), my_isr, FALLING);
-  interrupts();
+  //attachInterrupt(digitalPinToInterrupt(interrupt_pin), my_isr, FALLING);
+  //interrupts();
   Serial.begin(9600);
   
 }
@@ -93,7 +96,10 @@ void stopMotors(){
 }
 
 void centerRobot(){
-  
+  if(r2 < 80){
+    inReverse = false;
+  }
+  vCalc = 50;
 }
 
 void rotate(int amount){
@@ -101,10 +107,10 @@ void rotate(int amount){
 }
 
 void reactReadings(){
-  if(r2 < 50){
-    vCalc = 0;
-    centerRobot();
+  if(r2 > 100){
+    inReverse = true;
   }
+  vCalc = 30 + 200/r2;
   if(r1 - r3 > 50){
     rotate(-2);
   }
@@ -134,11 +140,18 @@ void printMaze(){
 void loop() {
   // put your main code here, to run repeatedly:
   
-  //int readVal = analogRead(20);
-  //Serial.println("Distance from wall: " + readVal);
-  driveForward(vCalc); //2.3 rotations per sec, 28.9cm/s
-  reactReadings();
-  //printMaze();
-  delay(1000);
-  r2 -= 100;
+  int readVal = analogRead(20);
+  r2 = readVal;
+  Serial.print("Distance from wall: ");
+  Serial.println(readVal);
+  
+  if(!inReverse){
+    reactReadings();
+    driveForward(vCalc); //2.3 rotations per sec, 28.9cm/s
+  }
+  else{
+    centerRobot();
+    driveReverse(vCalc);
+  }
+  delay(100);
 }
