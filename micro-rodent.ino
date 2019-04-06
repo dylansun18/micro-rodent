@@ -23,6 +23,8 @@ int prevTime = 0;
 int currTime = 0;
 int timeTol = 5; //works pretty well for 70 pwm but not as wellf or 30 pwm tmp38
 int angle = 0;
+double xDist = 0.2;
+double yDist = 0;
 int r1 = 100;
 int r2 = 300;
 int r3 = 200;
@@ -148,10 +150,26 @@ void loop() {
   if(!inReverse){
     reactReadings();
     driveForward(vCalc); //2.3 rotations per sec, 28.9cm/s
+    Serial.print("vCalc ");
+    Serial.println(vCalc);
+    xDist += (0.004*vCalc) * sin(angle);
+    yDist += (0.004*vCalc) * cos(angle);
+    Serial.print("xDist ");
+    Serial.println(xDist);
+    Serial.print("yDist ");
+    Serial.println(yDist);
   }
   else{
     centerRobot();
     driveReverse(vCalc);
+    Serial.print("vCalc ");
+    Serial.println(vCalc);
+    xDist += (0.004*vCalc) * sin(angle);
+    yDist -= (0.004*vCalc) * cos(angle);
+    Serial.print("xDist ");
+    Serial.println(xDist);
+    Serial.print("yDist ");
+    Serial.println(yDist);
   }
   delay(100);
 }
