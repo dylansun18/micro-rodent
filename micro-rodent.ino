@@ -16,22 +16,33 @@ const int analogPin = 20;
 
 //Maze stuff
 Maze m1;
+int cells[4][4] = 
+  {
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0}
+  };
+bool wallsH[5][5]=
+  {
+    {0,0,0,0,0},
+    {0,0,0,0,0},
+    {0,0,0,0,0},
+    {0,0,0,0,0},
+    {0,0,0,0,0}
+  }
+int currentCell1 = 3;
+int currentCell2 = 0;
+bool wallsH [5][5];
+bool wallsV [5][5];
 
 //estimate position
-int motorCount = 0;
-int prevTime = 0;
-int currTime = 0;
-int timeTol = 5; //works pretty well for 70 pwm but not as wellf or 30 pwm tmp38
 int angle = 0;
 double xDist = 0.2;
 double yDist = 0;
 int r1 = 100;
 int r2 = 300;
 int r3 = 200;
-
-//calculate angle
-int rref = 100;
-int rread = 100;
 
 //calculate velocity
 vector<double> verror;
@@ -42,25 +53,7 @@ int vCalc = 70;
 
 //states
 bool inReverse = false;
-
-void my_isr(){
-  currTime = millis();
-  if(currTime - prevTime > timeTol){
-    motorCount++;
-    Serial.print(motorCount);
-    Serial.print(" Interrupts, ");
-    
-    //vread is the angular velocity given by motor encoders (1/12 of a rotation per change in time)
-    vread = (1.0/12.0)/((currTime-prevTime)/1000.0); //not accurate rn
-    verror.push_back(vref-vread);
-    esum += (vref - vread);
-
-    Serial.print("vread: ");
-    Serial.println(vread);
-    prevTime = currTime;
-
-  }
-}
+bool inNewCell = true;
 
 void setup() {
   // put your setup code here, to run once:
@@ -73,8 +66,6 @@ void setup() {
 
   digitalWrite(sensorPin, HIGH);
   
-  //attachInterrupt(digitalPinToInterrupt(interrupt_pin), my_isr, FALLING);
-  //interrupts();
   Serial.begin(9600);
   
 }
@@ -108,6 +99,32 @@ void rotate(int amount){
   
 }
 
+void makeDecision(){
+  int sCellValues[4] = {0,0,0,0};
+  sCellValues[0] = cells[currentCell1][currentCell2+1];
+  sCellValues[1] = cells[currentCell1+1][currentCell2];
+  sCellValues[2] = cells[currentCell1][currentCell2-1];
+  sCellValues[3] = cells[currentCell1-1][currentCell2];
+
+  if(wallsH[currentCell1][currentCell2]){
+    sCellValues[0]= 10000;
+  }
+  if(wallsH[currentCell1][currentCell2-1]){
+    sCellValues[2]= 10000;
+  }
+  
+  int minIndex = 0;
+  for(int i = 0; i < 4; i++){
+    if(sCellValues[i] < sCellValues[minIndex]){
+      minIndex = i;
+    }
+  }
+}
+
+void updateLocation(int x, int y){
+  
+}
+
 void reactReadings(){
   if(r2 > 100){
     inReverse = true;
@@ -119,13 +136,6 @@ void reactReadings(){
   if(r3 - r1 > 50){
     rotate(2);
   }
-}
-
-int calculatePwm(unsigned long ct, unsigned long pt){
-  
-  int changeInPwm = floor(1.0*verror.back() + 0.1*((verror.back()- verror[verror.size() - 2])/(ct-pt)) + 0*currTime*esum);
-  int newPwm = vCalc + changeInPwm;
-  return newPwm;
 }
 
 void printMaze(){
@@ -146,6 +156,11 @@ void loop() {
   r2 = readVal;
   Serial.print("Distance from wall: ");
   Serial.println(readVal);
+  if(inNewCell){
+     makeDecision();
+     updateLocation(xDist,yDist);
+     inNewCell = false;
+  }
   
   if(!inReverse){
     reactReadings();
@@ -158,6 +173,7 @@ void loop() {
     Serial.println(xDist);
     Serial.print("yDist ");
     Serial.println(yDist);
+
   }
   else{
     centerRobot();

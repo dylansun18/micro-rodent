@@ -10,10 +10,6 @@ class Maze{
     void initCells();
     void initWalls();
     void floodFill();
-    void floodFillBR(int x, int y, int d);
-    void floodFillBL(int x, int y, int d);
-    void floodFillTL(int x, int y, int d);
-    void floodFillTR(int x, int y, int d);
     void setWallNorth(int x, int y);
     void setWallEast(int x, int y);
     void setWallSouth(int x, int y);

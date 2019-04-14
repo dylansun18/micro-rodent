@@ -22,7 +22,7 @@ void Maze::initCells(){
 void Maze::initWalls(){
   for(int i=0; i < 9; i++){
     for(int j = 0 ; j < 9; j++){
-       wallsH[i][j] = false;
+       wallsH[i][j] = false; //maze has no walls, if see wall set to true
        wallsV[i][j] = false;
     }
   }
